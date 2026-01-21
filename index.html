@@ -1,3 +1,4 @@
+
 <script>
 function parseMatches(text){
   let lines = text
@@ -19,6 +20,18 @@ function parseMatches(text){
   });
 
   return {matches: valid, invalid: invalid};
+}
+
+/* ✅ رجّعناها */
+function checkInput(type){
+  let box = document.getElementById(type).value;
+  let parsed = parseMatches(box);
+
+  document.getElementById(type+"Count").innerText =
+    "عدد المباريات: " + parsed.matches.length;
+
+  document.getElementById(type+"Error").innerText =
+    parsed.invalid ? "❌ في نتيجة مكتوبة بصيغة غلط" : "";
 }
 
 function calculate(){
@@ -47,11 +60,9 @@ function calculate(){
 
   let GG = (hGG>=3 && aGG>=3) ? "نعم" : "لا";
 
-  // 📊 متوسط الأهداف
   let hAvgGoals = home.reduce((s,x)=>s+x.f,0) / home.length;
   let aAvgGoals = away.reduce((s,x)=>s+x.f,0) / away.length;
 
-  // 🔒 عدد 0-0
   let zeroZeroCount = [...home, ...away]
     .filter(x=>x.f===0 && x.a===0).length;
 
@@ -60,29 +71,16 @@ function calculate(){
   let winner = "";
   let score = "";
 
-  // =========================
-  // 🟡 فلتر التعادل الذكي
-  // =========================
-  if(
-    GG === "لا" &&
-    zeroZeroCount >= 2 &&
-    diff <= 0.3
-  ){
+  // 🟡 فلتر التعادل
+  if(GG === "لا" && zeroZeroCount >= 2 && diff <= 0.3){
     winner = "تعادل";
     score = "0-0";
-  }
-  else {
-    // =========================
-    // 🏆 اختيار الفائز
-    // =========================
+  } else {
     let isHomeWinner = hCS > aCS;
     winner = isHomeWinner
       ? "الفريق الموجود على الشمال"
       : "الفريق الموجود على اليمين";
 
-    // =========================
-    // 🎯 النتيجة الأقرب
-    // =========================
     if(GG === "نعم"){
       score = "1-1";
     } else {
@@ -100,4 +98,4 @@ function calculate(){
   📊 <b>النتيجة الأقرب:</b> ${score}
   `;
 }
-  </script>
+</script>
