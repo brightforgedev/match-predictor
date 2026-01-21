@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>مباريات اليوم | Today Matches</title>
+  <style>
+    body{
+      background:#111;
+      color:#fff;
+      font-family:Arial,sans-serif;
+      margin:0;
+      padding:15px;
+      direction:rtl
+    }
+    header{text-align:center;margin-bottom:20px}
+    h1{color:#00ffcc;margin-bottom:5px}
+    .lang{margin-top:10px}
+    .lang button{
+      margin:0 5px;
+      padding:6px 12px;
+      border:none;
+      border-radius:6px;
+      cursor:pointer;
+      font-weight:bold
+    }
+    .lang .active{background:#00ffcc;color:#111}
+    .match{
+      background:#1a1a1a;
+      padding:15px;
+      border-radius:10px;
+      margin-bottom:10px;
+      border-right:4px solid #00ffcc
+    }
+    .league{color:#00ffcc;font-size:14px;margin-bottom:5px;font-weight:bold}
+    .teams{
+      font-size:16px;
+      margin:8px 0;
+      display:flex;
+      justify-content:space-between;
+      align-items:center
+    }
+    .time{
+      font-size:13px;
+      opacity:.7;
+      background:#333;
+      display:inline-block;
+      padding:2px 8px;
+      border-radius:4px
+    }
+    .loading{text-align:center;margin-top:40px;font-size:18px}
+  </style>
+</head>
+<body>
+
+<header>
+  <h1 id="title">⚽ مباريات اليوم</h1>
+  <div class="lang">
+    <button id="btnAr" class="active" onclick="setLang('ar')">AR</button>
+    <button id="btnEn" onclick="setLang('en')">EN</button>
+  </div>
+</header>
+
+<div id="matches" class="loading">⏳ جاري تحميل المباريات...</div>
+
+<script>
+  const API_KEY = "17f2cc19d0e103fe6dc3a207b828b1df";
+
+  let lang = "ar";
+
+  function setLang(l){
+    lang = l;
+    btnAr.classList.remove("active");
+    btnEn.classList.remove("active");
+
+    if(l==="ar"){
+      btnAr.classList.add("active");
+      title.innerText="⚽ مباريات اليوم";
+      document.body.style.direction="rtl";
+    }else{
+      btnEn.classList.add("active");
+      title.innerText="⚽ Today's Matches";
+      document.body.style.direction="ltr";
+    }
+    loadMatches();
+  }
+
+  async function loadMatches(){
+    const box=document.getElementById("matches");
+    box.innerHTML=lang==="ar"?"⏳ جاري التحميل...":"⏳ Loading...";
+
+    const d=new Date();
+    const today=
+      d.getFullYear()+"-"+
+      String(d.getMonth()+1).padStart(2,"0")+"-"+
+      String(d.getDate()).padStart(2,"0");
+
+    try{
+      const res=await fetch(
+        `https://v3.football.api-sports.io/fixtures?date=${today}`,
+        {headers:{"x-apisports-key":API_KEY}}
+      );
+      const data=await res.json();
+      const games=data.response;
+
+      if(!games || !games.length){
+        box.innerHTML=lang==="ar"?"❌ لا توجد مباريات اليوم":"❌ No matches today";
+        return;
+      }
+
+      box.innerHTML="";
+      games.forEach(m=>{
+        const time=new Date(m.fixture.date)
+          .toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"});
+
+        const div=document.createElement("div");
+        div.className="match";
+        div.innerHTML=
+          lang==="ar"
+          ? `<div class="league">🏆 ${m.league.name}</div>
+             <div class="teams"><span>${m.teams.home.name}</span> ⚡ <span>${m.teams.away.name}</span></div>
+             <div class="time">⏰ ${time}</div>`
+          : `<div class="league">🏆 ${m.league.name}</div>
+             <div class="teams"><span>${m.teams.home.name}</span> vs <span>${m.teams.away.name}</span></div>
+             <div class="time">⏰ ${time}</div>`;
+        box.appendChild(div);
+      });
+    }catch{
+      box.innerHTML=lang==="ar"?"❌ خطأ في الاتصال":"❌ Connection error";
+    }
+  }
+
+  loadMatches();
+</script>
+
+</body>
+</html>
