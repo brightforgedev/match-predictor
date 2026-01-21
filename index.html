@@ -1,56 +1,144 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>توقّع المباريات</title>
+
+<style>
+body{
+  background:#111;
+  color:#fff;
+  font-family:Arial;
+  padding:20px;
+}
+h1,h2{color:#00ffcc;text-align:center}
+.info{
+  background:#1a1a1a;
+  padding:12px;
+  border-radius:8px;
+  margin-bottom:15px;
+  font-size:14px;
+  line-height:1.7;
+}
+textarea{
+  width:100%;
+  min-height:100px;
+  margin:10px 0;
+  padding:10px;
+  background:#1a1a1a;
+  color:#fff;
+  border:1px solid #333;
+  border-radius:8px;
+  resize:none;
+}
+.counter{font-size:13px;margin-bottom:10px}
+button{
+  width:100%;
+  padding:14px;
+  background:#00ffcc;
+  border:none;
+  font-size:18px;
+  font-weight:bold;
+  border-radius:10px;
+  cursor:pointer;
+}
+.result{
+  margin-top:20px;
+  font-size:18px;
+  background:#1a1a1a;
+  padding:12px;
+  border-radius:8px;
+}
+.error{color:#ff6b6b;font-size:14px}
+</style>
+</head>
+
+<body>
+
+<h1>⚽ توقّع المباريات</h1>
+
+<div class="info">
+• انسخ آخر <b>5 مباريات</b> لكل فريق (سطر لكل مباراة)<br>
+• الخانة اللي فوق = الفريق على <b>الشمال</b><br>
+• الخانة اللي تحت = الفريق على <b>اليمين</b><br>
+• الصيغة: <b>1-0</b>
+</div>
+
+<h2>⬆️ الفريق الموجود على الشمال</h2>
+<textarea id="home" oninput="checkInput('home')"></textarea>
+<div class="counter" id="homeCount">عدد المباريات: 0</div>
+<div class="error" id="homeError"></div>
+
+<h2>⬇️ الفريق الموجود على اليمين</h2>
+<textarea id="away" oninput="checkInput('away')"></textarea>
+<div class="counter" id="awayCount">عدد المباريات: 0</div>
+<div class="error" id="awayError"></div>
+
+<button onclick="calculate()">احسب</button>
+
+<div class="result" id="output"></div>
+
 <script>
+function parseMatches(text){
+  let lines=text.split("\n").map(x=>x.trim()).filter(x=>x);
+  let valid=[],invalid=false;
+  lines.forEach(l=>{
+    if(/^\d+-\d+$/.test(l)){
+      let [f,a]=l.split("-").map(Number);
+      valid.push({f,a});
+    } else invalid=true;
+  });
+  return {matches:valid,invalid};
+}
+
+function checkInput(type){
+  let p=parseMatches(document.getElementById(type).value);
+  document.getElementById(type+"Count").innerText="عدد المباريات: "+p.matches.length;
+  document.getElementById(type+"Error").innerText=p.invalid?"❌ صيغة غلط":"";
+}
+
 function calculate(){
-  let h=parseMatches(home.value), a=parseMatches(away.value);
-  let out=document.getElementById("output");
+  let h=parseMatches(home.value),
+      a=parseMatches(away.value),
+      out=document.getElementById("output");
 
-  if(h.invalid||a.invalid){
-    out.innerText="❌ أصلح الصيغة الغلط";
-    return;
-  }
-  if(h.matches.length<5||a.matches.length<5){
-    out.innerText="⚠️ لازم تدخل 5 مباريات لكل فريق";
-    return;
-  }
+  if(h.invalid||a.invalid){out.innerText="❌ أصلح الصيغة";return;}
+  if(h.matches.length<5||a.matches.length<5){out.innerText="⚠️ لازم 5 مباريات لكل فريق";return;}
 
-  // Clean Sheets
-  let hCS=h.matches.filter(x=>x.a===0).length;
-  let aCS=a.matches.filter(x=>x.a===0).length;
+  // دفاع الشمال
+  let hCS = h.matches.filter(x=>x.a===0).length;
 
-  // تسجيل الأهداف
-  let hScored=h.matches.filter(x=>x.f>0).length;
-  let aScored=a.matches.filter(x=>x.f>0).length;
+  // هجوم اليمين
+  let aScored = a.matches.filter(x=>x.f>0).length;
+  let aHighGoals = a.matches.filter(x=>x.f>=2).length;
 
-  // GG
-  let hGG=h.matches.filter(x=>x.f>0&&x.a>0).length;
-  let aGG=a.matches.filter(x=>x.f>0&&x.a>0).length;
+  // GG تاريخي
+  let hGG = h.matches.filter(x=>x.f>0&&x.a>0).length;
+  let aGG = a.matches.filter(x=>x.f>0&&x.a>0).length;
 
-  // مباريات صفر أهداف
-  let aZeroGoals=a.matches.filter(x=>x.f===0).length;
-
-  // فلتر GG الذكي
+  // القرار الافتراضي
   let GG="لا";
-  if(hGG>=3 && aGG>=3 && hScored>=3 && aScored>=3 && aZeroGoals<2){
+
+  // شرط GG الأساسي
+  if(hGG>=3 && aGG>=3 && aScored>=3){
     GG="نعم";
   }
 
-  // تحديد المباراة الدفاعية
-  let defensive=(hCS>=3 && aScored<=2);
+  // ❌ كسر GG بدفاع قوي
+  if(hCS>=2 && aHighGoals<=2){
+    GG="لا";
+  }
 
   // الفائز
   let winner="تعادل";
-  if(!defensive){
-    winner=(hCS>aCS)?"الفريق الموجود على الشمال":"الفريق الموجود على اليمين";
-  }
+  if(hCS>aScored) winner="الفريق الموجود على الشمال";
+  else if(aScored>hCS) winner="الفريق الموجود على اليمين";
 
   // النتيجة الأقرب
   let score="1-1";
-  if(defensive){
-    score="0-0";
-    winner="تعادل";
-  }else if(GG==="نعم"){
-    score=(hCS>aCS)?"2-1":"1-2";
-  }else{
-    score=(hCS>aCS)?"2-0":"0-2";
+  if(GG==="لا"){
+    score=(winner==="الفريق الموجود على الشمال")?"2-0":"0-2";
   }
 
   out.innerHTML=`
@@ -60,3 +148,6 @@ function calculate(){
   `;
 }
 </script>
+
+</body>
+</html>
