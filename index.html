@@ -4,40 +4,110 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Match Predictor</title>
+
 <style>
-body{background:#111;color:#fff;font-family:Arial;padding:20px}
-h2{color:#00ffcc}
-input{width:70px;margin:4px;text-align:center;padding:6px}
-button{padding:10px 15px;background:#00ffcc;border:none;font-size:16px}
-.result{margin-top:20px;font-size:18px}
+body{
+  background:#111;
+  color:#fff;
+  font-family:Arial;
+  padding:20px;
+}
+h2{
+  color:#00ffcc;
+}
+textarea{
+  width:100%;
+  min-height:90px;
+  margin:10px 0;
+  padding:10px;
+  background:#1a1a1a;
+  color:#fff;
+  border:1px solid #333;
+  border-radius:8px;
+  resize:none;
+}
+button{
+  width:100%;
+  padding:12px;
+  background:#00ffcc;
+  border:none;
+  font-size:18px;
+  font-weight:bold;
+  border-radius:10px;
+  cursor:pointer;
+}
+.result{
+  margin-top:20px;
+  font-size:18px;
+}
+.note{
+  font-size:13px;
+  opacity:.8;
+}
 </style>
 </head>
+
 <body>
 
-<h2>Home Team</h2>
-<input id="h1"><input id="h2"><input id="h3"><input id="h4"><input id="h5">
+<h2>🏠 الفريق الأول</h2>
+<textarea id="home" placeholder="مثال:
+1-0
+2-1
+0-0
+1-1
+2-0"></textarea>
+<div class="note">انسخ النتائج والصقها مباشرة (سطر لكل مباراة)</div>
 
-<h2>Away Team</h2>
-<input id="a1"><input id="a2"><input id="a3"><input id="a4"><input id="a5">
+<h2>✈️ الفريق الثاني</h2>
+<textarea id="away" placeholder="مثال:
+0-1
+1-2
+0-0
+2-2
+1-1"></textarea>
 
-<br><br>
-<button onclick="calc()">Calculate</button>
+<button onclick="calculate()">احسب</button>
 
-<div class="result" id="out"></div>
+<div class="result" id="output"></div>
 
 <script>
-function p(v){let s=v.split('-');return{f:+s[0],a:+s[1]}}
-function calc(){
- let H=[h1,h2,h3,h4,h5].map(x=>p(x.value));
- let A=[a1,a2,a3,a4,a5].map(x=>p(x.value));
- let hCS=H.filter(x=>x.a==0).length;
- let aCS=A.filter(x=>x.a==0).length;
- let hGG=H.filter(x=>x.f>0&&x.a>0).length;
- let aGG=A.filter(x=>x.f>0&&x.a>0).length;
- let GG=(hGG>=3&&aGG>=3)?"YES":"NO";
- let W=(aCS>hCS)?"Away":"Home";
- let S=(GG=="NO")?"0-1":"1-1";
- out.innerHTML=`Winner: ${W}<br>GG: ${GG}<br>Score: ${S}`;
+function parseMatches(text){
+  return text
+    .replace(/,/g,"\n")
+    .split("\n")
+    .map(x=>x.trim())
+    .filter(x=>x.includes("-"))
+    .map(x=>{
+      let s=x.split("-");
+      return {f:Number(s[0]), a:Number(s[1])};
+    });
+}
+
+function calculate(){
+  let home=parseMatches(document.getElementById("home").value);
+  let away=parseMatches(document.getElementById("away").value);
+  let output=document.getElementById("output");
+
+  if(home.length<5 || away.length<5){
+    output.innerHTML="⚠️ لازم 5 مباريات لكل فريق";
+    return;
+  }
+
+  let hCS=home.filter(x=>x.a===0).length;
+  let aCS=away.filter(x=>x.a===0).length;
+
+  let hGG=home.filter(x=>x.f>0 && x.a>0).length;
+  let aGG=away.filter(x=>x.f>0 && x.a>0).length;
+
+  let GG=(hGG>=3 && aGG>=3) ? "نعم" : "لا";
+  let winner=(hCS>aCS) ? "الفريق الأول" : "الفريق الثاني";
+  let score=(GG==="نعم") ? "1-1" : "1-0";
+
+  output.innerHTML=`
+  🏆 الفائز المتوقع: <b>${winner}</b><br>
+  ⚽ GG: <b>${GG}</b><br>
+  📊 النتيجة الأقرب: <b>${score}</b>
+  `;
 }
 </script>
 
