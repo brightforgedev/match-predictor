@@ -1,128 +1,4 @@
-<!DOCTYPE html>
-<html lang="ar">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>توقّع المباريات</title>
-
-<style>
-body{
-  background:#111;
-  color:#fff;
-  font-family:Arial;
-  padding:20px;
-}
-h1{
-  color:#00ffcc;
-  text-align:center;
-}
-h2{
-  color:#00ffcc;
-}
-.info{
-  background:#1a1a1a;
-  padding:12px;
-  border-radius:8px;
-  margin-bottom:15px;
-  font-size:14px;
-  line-height:1.7;
-}
-textarea{
-  width:100%;
-  min-height:100px;
-  margin:10px 0;
-  padding:10px;
-  background:#1a1a1a;
-  color:#fff;
-  border:1px solid #333;
-  border-radius:8px;
-  resize:none;
-}
-.counter{
-  font-size:13px;
-  margin-bottom:10px;
-}
-button{
-  width:100%;
-  padding:14px;
-  background:#00ffcc;
-  border:none;
-  font-size:18px;
-  font-weight:bold;
-  border-radius:10px;
-  cursor:pointer;
-}
-.result{
-  margin-top:20px;
-  font-size:18px;
-  background:#1a1a1a;
-  padding:12px;
-  border-radius:8px;
-}
-.error{
-  color:#ff6b6b;
-  font-size:14px;
-}
-</style>
-</head>
-
-<body>
-
-<h1>⚽ توقّع المباريات</h1>
-
-<div class="info">
-📌 <b>طريقة الاستخدام:</b><br>
-• انسخ <b>آخر 5 مباريات لكل فريق</b> (مباراة في كل سطر).<br>
-• الخانة اللي فوق = الفريق الموجود على <b>الشمال</b>.<br>
-• الخانة اللي تحت = الفريق الموجود على <b>اليمين</b>.<br>
-• الصيغة الصحيحة: <b>1-0</b>
-</div>
-
-<h2>⬆️ الفريق الموجود على الشمال</h2>
-<textarea id="home" oninput="checkInput('home')" placeholder="مثال:
-1-0
-2-1
-0-0
-1-1
-2-0"></textarea>
-<div class="counter" id="homeCount">عدد المباريات: 0</div>
-<div class="error" id="homeError"></div>
-
-<h2>⬇️ الفريق الموجود على اليمين</h2>
-<textarea id="away" oninput="checkInput('away')" placeholder="مثال:
-0-1
-1-2
-0-0
-2-2
-1-1"></textarea>
-<div class="counter" id="awayCount">عدد المباريات: 0</div>
-<div class="error" id="awayError"></div>
-
-<button onclick="calculate()">احسب</button>
-
-<div class="result" id="output"></div>
-
 <script>
-function parseMatches(text){
-  let lines = text.split("\n").map(x=>x.trim()).filter(x=>x);
-  let valid=[], invalid=false;
-
-  lines.forEach(l=>{
-    if(/^\d+-\d+$/.test(l)){
-      let [f,a]=l.split("-").map(Number);
-      valid.push({f,a});
-    } else invalid=true;
-  });
-
-  return {matches:valid, invalid};
-}
-
-function checkInput(type){
-  let p=parseMatches(document.getElementById(type).value);
-  document.getElementById(type+"Count").innerText="عدد المباريات: "+p.matches.length;
-  document.getElementById(type+"Error").innerText=p.invalid?"❌ صيغة غلط":"";
-}
-
 function calculate(){
   let h=parseMatches(home.value), a=parseMatches(away.value);
   let out=document.getElementById("output");
@@ -136,32 +12,51 @@ function calculate(){
     return;
   }
 
+  // Clean Sheets
   let hCS=h.matches.filter(x=>x.a===0).length;
   let aCS=a.matches.filter(x=>x.a===0).length;
 
+  // تسجيل الأهداف
+  let hScored=h.matches.filter(x=>x.f>0).length;
+  let aScored=a.matches.filter(x=>x.f>0).length;
+
+  // GG
   let hGG=h.matches.filter(x=>x.f>0&&x.a>0).length;
   let aGG=a.matches.filter(x=>x.f>0&&x.a>0).length;
 
-  let GG=(hGG>=3&&aGG>=3)?"نعم":"لا";
+  // مباريات صفر أهداف
+  let aZeroGoals=a.matches.filter(x=>x.f===0).length;
 
-  let defensive=(hCS>=3&&aCS>=3&&GG==="لا");
+  // فلتر GG الذكي
+  let GG="لا";
+  if(hGG>=3 && aGG>=3 && hScored>=3 && aScored>=3 && aZeroGoals<2){
+    GG="نعم";
+  }
 
+  // تحديد المباراة الدفاعية
+  let defensive=(hCS>=3 && aScored<=2);
+
+  // الفائز
   let winner="تعادل";
   if(!defensive){
     winner=(hCS>aCS)?"الفريق الموجود على الشمال":"الفريق الموجود على اليمين";
   }
 
-  let score;
-  if(defensive) score="0-0";
-  else if(GG==="نعم") score="1-1";
-  else score="1-0";
+  // النتيجة الأقرب
+  let score="1-1";
+  if(defensive){
+    score="0-0";
+    winner="تعادل";
+  }else if(GG==="نعم"){
+    score=(hCS>aCS)?"2-1":"1-2";
+  }else{
+    score=(hCS>aCS)?"2-0":"0-2";
+  }
 
-  out.innerHTML=
-  `🏆 <b>الفائز المتوقع:</b> ${winner}<br>
-   ⚽ <b>GG:</b> ${GG}<br>
-   📊 <b>النتيجة الأقرب:</b> ${score}`;
+  out.innerHTML=`
+  🏆 <b>الفائز المتوقع:</b> ${winner}<br>
+  ⚽ <b>GG:</b> ${GG}<br>
+  📊 <b>النتيجة الأقرب:</b> ${score}
+  `;
 }
 </script>
-
-</body>
-</html>
