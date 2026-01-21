@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Match Predictor</title>
+<title>توقّع المباريات</title>
 
 <style>
 body{
@@ -38,6 +38,10 @@ textarea{
   border-radius:8px;
   resize:none;
 }
+.counter{
+  font-size:13px;
+  margin-bottom:10px;
+}
 button{
   width:100%;
   padding:12px;
@@ -55,42 +59,47 @@ button{
   padding:12px;
   border-radius:8px;
 }
-.note{
-  font-size:13px;
-  opacity:.9;
+.error{
+  color:#ff6b6b;
+  font-size:14px;
+  margin-top:5px;
 }
 </style>
 </head>
 
 <body>
 
-<h1>⚽ Match Predictor</h1>
+<h1>⚽ توقّع المباريات</h1>
 
 <div class="info">
 📌 <b>طريقة الاستخدام:</b><br>
 • انسخ <b>آخر 5 مباريات لكل فريق</b> (مباراة في كل سطر).<br>
 • <b>الخانة اللي فوق</b> = الفريق الموجود على <b>الشمال</b> في موقع النتائج.<br>
 • <b>الخانة اللي تحت</b> = الفريق الموجود على <b>اليمين</b>.<br>
-• الصيغة المطلوبة: <b>1-0</b>
+• الصيغة الصحيحة: <b>1-0</b>
 </div>
 
 <h2>⬆️ الفريق الموجود على الشمال</h2>
-<textarea id="home" placeholder="مثال:
+<textarea id="home" oninput="checkInput('home')"
+placeholder="مثال:
 1-0
 2-1
 0-0
 1-1
 2-0"></textarea>
-<div class="note">انسخ آخر 5 مباريات للفريق والصقها هنا (مباراة في كل سطر)</div>
+<div class="counter" id="homeCount">عدد المباريات: 0</div>
+<div class="error" id="homeError"></div>
 
 <h2>⬇️ الفريق الموجود على اليمين</h2>
-<textarea id="away" placeholder="مثال:
+<textarea id="away" oninput="checkInput('away')"
+placeholder="مثال:
 0-1
 1-2
 0-0
 2-2
 1-1"></textarea>
-<div class="note">انسخ آخر 5 مباريات للفريق والصقها هنا (مباراة في كل سطر)</div>
+<div class="counter" id="awayCount">عدد المباريات: 0</div>
+<div class="error" id="awayError"></div>
 
 <button onclick="calculate()">احسب</button>
 
@@ -98,38 +107,67 @@ button{
 
 <script>
 function parseMatches(text){
-  return text
+  let lines = text
     .replace(/,/g,"\n")
     .split("\n")
     .map(x=>x.trim())
-    .filter(x=>x.includes("-"))
-    .map(x=>{
-      let s=x.split("-");
-      return {f:Number(s[0]), a:Number(s[1])};
-    });
+    .filter(x=>x.length>0);
+
+  let valid = [];
+  let invalid = false;
+
+  lines.forEach(l=>{
+    if(/^\d+-\d+$/.test(l)){
+      let s=l.split("-");
+      valid.push({f:Number(s[0]), a:Number(s[1])});
+    } else {
+      invalid = true;
+    }
+  });
+
+  return {matches: valid, invalid: invalid};
+}
+
+function checkInput(type){
+  let box = document.getElementById(type).value;
+  let parsed = parseMatches(box);
+
+  document.getElementById(type+"Count").innerText =
+    "عدد المباريات: " + parsed.matches.length;
+
+  document.getElementById(type+"Error").innerText =
+    parsed.invalid ? "❌ في نتيجة مكتوبة بصيغة غلط" : "";
 }
 
 function calculate(){
-  let home=parseMatches(document.getElementById("home").value);
-  let away=parseMatches(document.getElementById("away").value);
-  let output=document.getElementById("output");
+  let homeData = parseMatches(document.getElementById("home").value);
+  let awayData = parseMatches(document.getElementById("away").value);
+  let output = document.getElementById("output");
 
-  if(home.length<5 || away.length<5){
-    output.innerHTML="⚠️ لازم تدخل آخر 5 مباريات لكل فريق";
+  if(homeData.invalid || awayData.invalid){
+    output.innerHTML = "❌ أصلح الصيغة الغلط قبل الحساب";
     return;
   }
 
-  let hCS=home.filter(x=>x.a===0).length;
-  let aCS=away.filter(x=>x.a===0).length;
+  if(homeData.matches.length < 5 || awayData.matches.length < 5){
+    output.innerHTML = "⚠️ لازم تدخل 5 مباريات لكل فريق";
+    return;
+  }
 
-  let hGG=home.filter(x=>x.f>0 && x.a>0).length;
-  let aGG=away.filter(x=>x.f>0 && x.a>0).length;
+  let home = homeData.matches;
+  let away = awayData.matches;
 
-  let GG=(hGG>=3 && aGG>=3) ? "نعم" : "لا";
-  let winner=(hCS>aCS) ? "الفريق الموجود على الشمال" : "الفريق الموجود على اليمين";
-  let score=(GG==="نعم") ? "1-1" : "1-0";
+  let hCS = home.filter(x=>x.a===0).length;
+  let aCS = away.filter(x=>x.a===0).length;
 
-  output.innerHTML=`
+  let hGG = home.filter(x=>x.f>0 && x.a>0).length;
+  let aGG = away.filter(x=>x.f>0 && x.a>0).length;
+
+  let GG = (hGG>=3 && aGG>=3) ? "نعم" : "لا";
+  let winner = (hCS>aCS) ? "الفريق الموجود على الشمال" : "الفريق الموجود على اليمين";
+  let score = (GG==="نعم") ? "1-1" : "1-0";
+
+  output.innerHTML = `
   🏆 <b>الفائز المتوقع:</b> ${winner}<br>
   ⚽ <b>GG:</b> ${GG}<br>
   📊 <b>النتيجة الأقرب:</b> ${score}
