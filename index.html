@@ -12,8 +12,20 @@ body{
   font-family:Arial;
   padding:20px;
 }
+h1{
+  color:#00ffcc;
+  text-align:center;
+}
 h2{
   color:#00ffcc;
+}
+.info{
+  background:#1a1a1a;
+  padding:12px;
+  border-radius:8px;
+  margin-bottom:15px;
+  font-size:14px;
+  line-height:1.6;
 }
 textarea{
   width:100%;
@@ -39,6 +51,9 @@ button{
 .result{
   margin-top:20px;
   font-size:18px;
+  background:#1a1a1a;
+  padding:12px;
+  border-radius:8px;
 }
 .note{
   font-size:13px;
@@ -49,16 +64,25 @@ button{
 
 <body>
 
-<h2>🏠 الفريق الأول</h2>
+<h1>⚽ Match Predictor</h1>
+
+<div class="info">
+📌 <b>طريقة الاستخدام:</b><br>
+- انسخ آخر <b>5 مباريات</b> لكل فريق.<br>
+- <b>الخانة اللي فوق</b> = الفريق الموجود على <b>الشمال</b> في موقع النتائج.<br>
+- <b>الخانة اللي تحت</b> = الفريق الموجود على <b>اليمين</b>.<br>
+- كل مباراة في سطر بالشكل: <b>1-0</b>
+</div>
+
+<h2>⬆️ الفريق الموجود على الشمال</h2>
 <textarea id="home" placeholder="مثال:
 1-0
 2-1
 0-0
 1-1
 2-0"></textarea>
-<div class="note">انسخ النتائج والصقها مباشرة (سطر لكل مباراة)</div>
 
-<h2>✈️ الفريق الثاني</h2>
+<h2>⬇️ الفريق الموجود على اليمين</h2>
 <textarea id="away" placeholder="مثال:
 0-1
 1-2
@@ -89,7 +113,7 @@ function calculate(){
   let output=document.getElementById("output");
 
   if(home.length<5 || away.length<5){
-    output.innerHTML="⚠️ لازم 5 مباريات لكل فريق";
+    output.innerHTML="⚠️ لازم تدخل 5 مباريات لكل فريق";
     return;
   }
 
@@ -100,13 +124,13 @@ function calculate(){
   let aGG=away.filter(x=>x.f>0 && x.a>0).length;
 
   let GG=(hGG>=3 && aGG>=3) ? "نعم" : "لا";
-  let winner=(hCS>aCS) ? "الفريق الأول" : "الفريق الثاني";
+  let winner=(hCS>aCS) ? "الفريق الموجود على الشمال" : "الفريق الموجود على اليمين";
   let score=(GG==="نعم") ? "1-1" : "1-0";
 
   output.innerHTML=`
-  🏆 الفائز المتوقع: <b>${winner}</b><br>
-  ⚽ GG: <b>${GG}</b><br>
-  📊 النتيجة الأقرب: <b>${score}</b>
+  🏆 <b>الفائز المتوقع:</b> ${winner}<br>
+  ⚽ <b>GG:</b> ${GG}<br>
+  📊 <b>النتيجة الأقرب:</b> ${score}
   `;
 }
 </script>
