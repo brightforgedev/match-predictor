@@ -3,155 +3,120 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>تحدي الذكاء</title>
+<title>تحدي العباقرة</title>
 
 <style>
 body{
-    font-family: Tahoma, Arial;
-    background:#0f172a;
-    color:white;
-    text-align:center;
-    margin:0;
-    padding:0;
+font-family:Tahoma;
+background:#0b1220;
+color:white;
+text-align:center;
+margin:0;
+padding:20px;
 }
-.container{padding:25px;}
-h1{margin-top:40px;font-size:28px;}
+.question{
+font-size:24px;
+margin:30px 0;
+}
 button{
-    background:#22c55e;
-    color:white;
-    border:none;
-    padding:15px 25px;
-    font-size:18px;
-    border-radius:10px;
-    cursor:pointer;
-    margin-top:20px;
+display:block;
+width:90%;
+margin:10px auto;
+padding:15px;
+font-size:18px;
+border:none;
+border-radius:12px;
+background:#1e293b;
+color:white;
+cursor:pointer;
 }
-.answers button{
-    display:block;
-    width:80%;
-    margin:10px auto;
-    background:#1e293b;
-}
-#levelBox{margin-top:15px;color:#facc15;}
-.question{font-size:26px;margin-top:40px;}
+button:hover{background:#334155;}
+#nextBtn{background:#22c55e;}
 </style>
 </head>
 
 <body>
 
-<div class="container" id="startScreen">
-    <h1>🧠 تحدي الذكاء</h1>
-    <p>هل تستطيع الوصول للمستوى 10؟</p>
-    <div id="levelBox"></div>
-    <button onclick="startGame()">ابدأ التحدي</button>
-</div>
+<h1>🎓 تحدي العباقرة</h1>
+<h3 id="progress"></h3>
 
-<div class="container" id="gameScreen" style="display:none">
-    <div id="levelDisplay"></div>
-    <div class="question" id="questionText"></div>
-    <div class="answers" id="answers"></div>
-</div>
+<div class="question" id="question"></div>
+<div id="answers"></div>
 
-<div class="container" id="endScreen" style="display:none">
-    <h2 id="resultText"></h2>
-    <button onclick="restart()">إعادة المحاولة</button>
-</div>
+<button id="nextBtn" onclick="nextQuestion()" style="display:none;">السؤال التالي</button>
+
+<h2 id="result"></h2>
 
 <script>
-let level=1;
-let questionCount=0;
-let correctAnswer=0;
 
-let best = localStorage.getItem("bestLevel");
-if(best){
-document.getElementById("levelBox").innerHTML="أعلى مستوى وصلت له: "+best;
-}
+const questions=[
+{q:"ما هي عاصمة فرنسا؟",a:["برلين","باريس","روما","مدريد"],c:1},
+{q:"كم عدد كواكب المجموعة الشمسية؟",a:["7","8","9","10"],c:1},
+{q:"أكبر محيط في العالم؟",a:["الأطلسي","الهندي","الهادئ","المتجمد"],c:2},
+{q:"من هو مخترع المصباح الكهربائي؟",a:["نيوتن","أديسون","أينشتاين","تسلا"],c:1},
+{q:"أطول نهر في العالم؟",a:["الأمازون","النيل","الدانوب","الفرات"],c:1},
+{q:"ما الغاز الذي نتنفسه؟",a:["الهيدروجين","الأكسجين","النيتروجين","ثاني أكسيد الكربون"],c:1},
+{q:"كم عدد أيام السنة؟",a:["360","365","366","364"],c:1},
+{q:"أسرع حيوان بري؟",a:["الأسد","الفهد","الحصان","النمر"],c:1},
+{q:"من رسم الموناليزا؟",a:["فان جوخ","دافنشي","بيكاسو","مايكل أنجلو"],c:1},
+{q:"كم عدد قارات العالم؟",a:["5","6","7","8"],c:2},
+{q:"ما أكبر كوكب؟",a:["الأرض","المريخ","المشتري","الزهرة"],c:2},
+{q:"ما العملة في اليابان؟",a:["يوان","ين","دولار","يورو"],c:1},
+{q:"في أي قارة تقع مصر؟",a:["آسيا","أوروبا","أفريقيا","أمريكا"],c:2},
+{q:"ما البحر بين مصر والسعودية؟",a:["المتوسط","الأحمر","الميت","العربي"],c:1},
+{q:"كم ضلع للمثلث؟",a:["2","3","4","5"],c:1},
+{q:"من هو أبو الأنبياء؟",a:["موسى","إبراهيم","عيسى","محمد"],c:1},
+{q:"ما الكوكب الأحمر؟",a:["المريخ","الزهرة","زحل","عطارد"],c:0},
+{q:"ما عاصمة إيطاليا؟",a:["روما","ميلان","نابولي","تورينو"],c:0},
+{q:"أكبر قارة؟",a:["أفريقيا","أوروبا","آسيا","أمريكا"],c:2},
+{q:"كم ساعة في اليوم؟",a:["12","18","24","30"],c:2}
+];
 
-function startGame(){
-document.getElementById("startScreen").style.display="none";
-document.getElementById("gameScreen").style.display="block";
-level=1;
-questionCount=0;
-nextQuestion();
-}
+let shuffled=questions.sort(()=>0.5-Math.random()).slice(0,10);
+let index=0;
+let score=0;
 
-function nextQuestion(){
-questionCount++;
-if(questionCount>5){level++;questionCount=1;}
-document.getElementById("levelDisplay").innerHTML="المستوى: "+level;
-generateQuestion();
-}
-
-function generateQuestion(){
-let type=Math.floor(Math.random()*3);
-if(type==0){generateSequence();}
-else if(type==1){generateMath();}
-else{generateLogic();}
-}
-
-function generateSequence(){
-let start=Math.floor(Math.random()*5)+1;
-let step=Math.floor(Math.random()*5)+2;
-let q=start+" , "+(start+step)+" , "+(start+2*step)+" , ?";
-correctAnswer=start+3*step;
-showQuestion(q,correctAnswer);
-}
-
-function generateMath(){
-let a=Math.floor(Math.random()*9)+2;
-let b=Math.floor(Math.random()*9)+2;
-let q="("+a+" × "+b+") - "+a+" = ?";
-correctAnswer=(a*b)-a;
-showQuestion(q,correctAnswer);
-}
-
-function generateLogic(){
-let names=["أحمد","محمود","علي","سامي","كريم"];
-let n1=names[Math.floor(Math.random()*names.length)];
-let n2=names[Math.floor(Math.random()*names.length)];
-let n3=names[Math.floor(Math.random()*names.length)];
-let q=n1+" أطول من "+n2+" ، و"+n2+" أطول من "+n3+" ، من الأطول؟";
-correctAnswer=n1;
-showQuestion(q,correctAnswer,true);
-}
-
-function showQuestion(text,answer,isText=false){
-document.getElementById("questionText").innerHTML=text;
-let answersDiv=document.getElementById("answers");
-answersDiv.innerHTML="";
-let options=[];
-if(isText){options=[answer,"لا يمكن تحديده","متساويان",""+answer+" و غيره"];}
-else{options=[answer,answer+2,answer-1,answer+3];}
-shuffle(options);
-options.forEach(opt=>{
+function loadQuestion(){
+document.getElementById("progress").innerText="السؤال "+(index+1)+" / 10";
+let q=shuffled[index];
+document.getElementById("question").innerText=q.q;
+let answers=document.getElementById("answers");
+answers.innerHTML="";
+q.a.forEach((ans,i)=>{
 let btn=document.createElement("button");
-btn.innerHTML=opt;
-btn.onclick=function(){checkAnswer(opt,answer)};
-answersDiv.appendChild(btn);
+btn.innerText=ans;
+btn.onclick=()=>checkAnswer(i);
+answers.appendChild(btn);
 });
 }
 
-function checkAnswer(selected,answer){
-if(selected==answer){nextQuestion();}
-else{endGame();}
+function checkAnswer(i){
+if(i===shuffled[index].c) score++;
+document.getElementById("nextBtn").style.display="block";
 }
 
-function endGame(){
-document.getElementById("gameScreen").style.display="none";
-document.getElementById("endScreen").style.display="block";
-document.getElementById("resultText").innerHTML="وصلت للمستوى "+level;
-let best=localStorage.getItem("bestLevel");
-if(!best || level>best){localStorage.setItem("bestLevel",level);}
+function nextQuestion(){
+index++;
+document.getElementById("nextBtn").style.display="none";
+if(index<shuffled.length) loadQuestion();
+else showResult();
 }
 
-function restart(){location.reload();}
+function showResult(){
+document.getElementById("question").style.display="none";
+document.getElementById("answers").style.display="none";
+document.getElementById("nextBtn").style.display="none";
 
-function shuffle(array){
-for(let i=array.length-1;i>0;i--){
-let j=Math.floor(Math.random()*(i+1));
-[array[i],array[j]]=[array[j],array[i]];
+let text="";
+if(score<=3) text="تحتاج مراجعة 😅";
+else if(score<=6) text="جيد 👍";
+else if(score<=8) text="مثقف 👌";
+else text="عبقري 🔥";
+
+document.getElementById("result").innerText="نتيجتك: "+score+"/10 - "+text;
 }
-}
+
+loadQuestion();
 </script>
 
 </body>
