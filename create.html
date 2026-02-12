@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>اعرفني</title>
+
+<style>
+
+body{
+margin:0;
+font-family:Tahoma;
+background:linear-gradient(#0b132b,#020617);
+color:white;
+text-align:center;
+}
+
+/* نجوم رمضان */
+body::before{
+content:"🌙 ✨ ⭐ 🕌 ✨ ⭐ 🌙";
+position:fixed;
+top:10px;
+width:100%;
+font-size:22px;
+opacity:0.35;
+letter-spacing:15px;
+}
+
+/* العنوان */
+h1{
+margin-top:60px;
+font-size:34px;
+color:#facc15;
+text-shadow:0 0 15px #facc15;
+}
+
+.subtitle{
+color:#e5e7eb;
+margin-top:-10px;
+margin-bottom:25px;
+}
+
+/* الأزرار */
+.menu button{
+display:block;
+width:85%;
+margin:12px auto;
+padding:16px;
+font-size:18px;
+border-radius:14px;
+border:1px solid #facc15;
+background:#1e293b;
+color:white;
+cursor:pointer;
+transition:.3s;
+}
+
+.menu button:hover{
+background:#334155;
+transform:scale(1.03);
+}
+
+/* صندوق المسبحة */
+#tasbeehBox{
+margin-top:25px;
+padding:15px;
+border-top:1px solid #facc15;
+}
+
+#counter{
+font-size:38px;
+color:#facc15;
+margin:15px 0;
+}
+
+#tasbeehBtn{
+background:#22c55e;
+border:none;
+font-size:22px;
+padding:15px 25px;
+border-radius:14px;
+}
+
+#resetBtn{
+background:#ef4444;
+border:none;
+margin-top:10px;
+padding:8px 15px;
+border-radius:10px;
+}
+
+</style>
+</head>
+
+<body>
+
+<h1>💬 اعرفني</h1>
+<div class="subtitle">اختبر أصحابك… وشوف مين فاهمك بجد 😄</div>
+
+<div class="menu">
+<button onclick="alert('قريبًا 👀')">👥 اعمل اختبار عن نفسك</button>
+<button onclick="alert('قريبًا 👀')">🧠 جرب اختبار صاحبك</button>
+<button onclick="openTasbeeh()">📿 المسبحة (استغفار)</button>
+<button onclick="openAzkar()">🌅 الأذكار</button>
+</div>
+
+<!-- المسبحة -->
+<div id="tasbeehBox" style="display:none;">
+<h2>📿 استغفر الله</h2>
+<div id="counter">0</div>
+<button id="tasbeehBtn" onclick="tasbeeh()">استغفر الله</button>
+<br>
+<button id="resetBtn" onclick="resetTasbeeh()">تصفير</button>
+</div>
+
+<script>
+
+/* حفظ العداد */
+let count=localStorage.getItem("tasbeehCount") || 0;
+document.getElementById("counter").innerText=count;
+
+function openTasbeeh(){
+document.getElementById("tasbeehBox").style.display="block";
+window.scrollTo(0,document.body.scrollHeight);
+}
+
+function tasbeeh(){
+count++;
+document.getElementById("counter").innerText=count;
+localStorage.setItem("tasbeehCount",count);
+}
+
+function resetTasbeeh(){
+count=0;
+document.getElementById("counter").innerText=count;
+localStorage.setItem("tasbeehCount",0);
+}
+
+function openAzkar(){
+alert("سيتم إضافة الأذكار في الخطوة القادمة ✨");
+}
+
+</script>
+
+</body>
+</html>
