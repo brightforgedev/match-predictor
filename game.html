@@ -3,47 +3,77 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>تحدي العباقرة</title>
+<title>🎓 تحدي العباقرة الرمضاني</title>
 
 <style>
 body{
 font-family:Tahoma;
-background:#0b1220;
+background:linear-gradient(#0b132b,#020617);
 color:white;
 text-align:center;
 margin:0;
 padding:20px;
 }
+
+/* زينة رمضان */
+body::before{
+content:"🌙 ✨ ⭐ 🕌 ✨ ⭐ 🌙";
+position:fixed;
+top:10px;
+width:100%;
+font-size:22px;
+opacity:0.35;
+letter-spacing:15px;
+}
+
+h1{
+color:#facc15;
+text-shadow:0 0 15px #facc15;
+}
+
 .question{
 font-size:24px;
 margin:30px 0;
 }
+
 button{
 display:block;
 width:90%;
 margin:10px auto;
 padding:15px;
 font-size:18px;
-border:none;
 border-radius:12px;
 background:#1e293b;
 color:white;
+border:1px solid #facc15;
 cursor:pointer;
+transition:0.3s;
 }
+
 button:hover{background:#334155;}
-#nextBtn{background:#22c55e;}
+
+#nextBtn{
+background:#22c55e;
+display:none;
+}
+
+#result{
+margin-top:15px;
+font-size:20px;
+font-weight:bold;
+}
 </style>
 </head>
 
 <body>
 
-<h1>🎓 تحدي العباقرة</h1>
+<h1>🌙 تحدي العباقرة</h1>
 <h3 id="progress"></h3>
 
 <div class="question" id="question"></div>
 <div id="answers"></div>
 
-<button id="nextBtn" onclick="nextQuestion()" style="display:none;">السؤال التالي</button>
+<button id="nextBtn" onclick="nextQuestion()">السؤال التالي</button>
 
 <h2 id="result"></h2>
 
@@ -78,10 +108,13 @@ let score=0;
 
 function loadQuestion(){
 document.getElementById("progress").innerText="السؤال "+(index+1)+" / 10";
+document.getElementById("result").innerText="";
 let q=shuffled[index];
 document.getElementById("question").innerText=q.q;
+
 let answers=document.getElementById("answers");
 answers.innerHTML="";
+
 q.a.forEach((ans,i)=>{
 let btn=document.createElement("button");
 btn.innerText=ans;
@@ -91,15 +124,40 @@ answers.appendChild(btn);
 }
 
 function checkAnswer(i){
-if(i===shuffled[index].c) score++;
+let correct=shuffled[index].c;
+let buttons=document.querySelectorAll("#answers button");
+
+buttons.forEach((btn,idx)=>{
+btn.disabled=true;
+
+if(idx===correct){
+btn.style.background="#16a34a";
+}
+
+if(idx===i && i!==correct){
+btn.style.background="#dc2626";
+}
+});
+
+if(i===correct){
+score++;
+document.getElementById("result").innerText="إجابة صحيحة ✅";
+}else{
+document.getElementById("result").innerText="إجابة خاطئة ❌ - الإجابة الصحيحة: "+shuffled[index].a[correct];
+}
+
 document.getElementById("nextBtn").style.display="block";
 }
 
 function nextQuestion(){
 index++;
 document.getElementById("nextBtn").style.display="none";
-if(index<shuffled.length) loadQuestion();
-else showResult();
+
+if(index<shuffled.length){
+loadQuestion();
+}else{
+showResult();
+}
 }
 
 function showResult(){
