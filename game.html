@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>تحدي الذكاء</title>
+
+<style>
+body{
+    font-family: Tahoma, Arial;
+    background:#0f172a;
+    color:white;
+    text-align:center;
+    margin:0;
+    padding:0;
+}
+.container{padding:25px;}
+h1{margin-top:40px;font-size:28px;}
+button{
+    background:#22c55e;
+    color:white;
+    border:none;
+    padding:15px 25px;
+    font-size:18px;
+    border-radius:10px;
+    cursor:pointer;
+    margin-top:20px;
+}
+.answers button{
+    display:block;
+    width:80%;
+    margin:10px auto;
+    background:#1e293b;
+}
+#levelBox{margin-top:15px;color:#facc15;}
+.question{font-size:26px;margin-top:40px;}
+</style>
+</head>
+
+<body>
+
+<div class="container" id="startScreen">
+    <h1>🧠 تحدي الذكاء</h1>
+    <p>هل تستطيع الوصول للمستوى 10؟</p>
+    <div id="levelBox"></div>
+    <button onclick="startGame()">ابدأ التحدي</button>
+</div>
+
+<div class="container" id="gameScreen" style="display:none">
+    <div id="levelDisplay"></div>
+    <div class="question" id="questionText"></div>
+    <div class="answers" id="answers"></div>
+</div>
+
+<div class="container" id="endScreen" style="display:none">
+    <h2 id="resultText"></h2>
+    <button onclick="restart()">إعادة المحاولة</button>
+</div>
+
+<script>
+let level=1;
+let questionCount=0;
+let correctAnswer=0;
+
+let best = localStorage.getItem("bestLevel");
+if(best){
+document.getElementById("levelBox").innerHTML="أعلى مستوى وصلت له: "+best;
+}
+
+function startGame(){
+document.getElementById("startScreen").style.display="none";
+document.getElementById("gameScreen").style.display="block";
+level=1;
+questionCount=0;
+nextQuestion();
+}
+
+function nextQuestion(){
+questionCount++;
+if(questionCount>5){level++;questionCount=1;}
+document.getElementById("levelDisplay").innerHTML="المستوى: "+level;
+generateQuestion();
+}
+
+function generateQuestion(){
+let type=Math.floor(Math.random()*3);
+if(type==0){generateSequence();}
+else if(type==1){generateMath();}
+else{generateLogic();}
+}
+
+function generateSequence(){
+let start=Math.floor(Math.random()*5)+1;
+let step=Math.floor(Math.random()*5)+2;
+let q=start+" , "+(start+step)+" , "+(start+2*step)+" , ?";
+correctAnswer=start+3*step;
+showQuestion(q,correctAnswer);
+}
+
+function generateMath(){
+let a=Math.floor(Math.random()*9)+2;
+let b=Math.floor(Math.random()*9)+2;
+let q="("+a+" × "+b+") - "+a+" = ?";
+correctAnswer=(a*b)-a;
+showQuestion(q,correctAnswer);
+}
+
+function generateLogic(){
+let names=["أحمد","محمود","علي","سامي","كريم"];
+let n1=names[Math.floor(Math.random()*names.length)];
+let n2=names[Math.floor(Math.random()*names.length)];
+let n3=names[Math.floor(Math.random()*names.length)];
+let q=n1+" أطول من "+n2+" ، و"+n2+" أطول من "+n3+" ، من الأطول؟";
+correctAnswer=n1;
+showQuestion(q,correctAnswer,true);
+}
+
+function showQuestion(text,answer,isText=false){
+document.getElementById("questionText").innerHTML=text;
+let answersDiv=document.getElementById("answers");
+answersDiv.innerHTML="";
+let options=[];
+if(isText){options=[answer,"لا يمكن تحديده","متساويان",""+answer+" و غيره"];}
+else{options=[answer,answer+2,answer-1,answer+3];}
+shuffle(options);
+options.forEach(opt=>{
+let btn=document.createElement("button");
+btn.innerHTML=opt;
+btn.onclick=function(){checkAnswer(opt,answer)};
+answersDiv.appendChild(btn);
+});
+}
+
+function checkAnswer(selected,answer){
+if(selected==answer){nextQuestion();}
+else{endGame();}
+}
+
+function endGame(){
+document.getElementById("gameScreen").style.display="none";
+document.getElementById("endScreen").style.display="block";
+document.getElementById("resultText").innerHTML="وصلت للمستوى "+level;
+let best=localStorage.getItem("bestLevel");
+if(!best || level>best){localStorage.setItem("bestLevel",level);}
+}
+
+function restart(){location.reload();}
+
+function shuffle(array){
+for(let i=array.length-1;i>0;i--){
+let j=Math.floor(Math.random()*(i+1));
+[array[i],array[j]]=[array[j],array[i]];
+}
+}
+</script>
+
+</body>
+</html>
